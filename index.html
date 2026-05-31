@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mia Biblioteca Cloud</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        /* Stile di base del corpo pagina */
+        #reader {
+            width: 100%;
+            max-width: 320px;
+            margin: 20px auto;
+        }
+
+        .risultato {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: green;
+        }
+
+        /*--------------------------------------quelli sopra sono per lo scanner------*/
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 15px;
+            margin: auto;
+            background-color: #f4f6f9;
+            color: #333;
+            transition: max-width 0.3s ease;
+            /* Effetto fluido quando si cambia modalità */
+        }
+
+        /* Classe per la modalità PC (Larga) */
+        .mode-pc {
+            max-width: 1200px;
+        }
+
+        /* Classe per la modalità SMARTPHONE (Stretta) */
+        .mode-phone {
+            max-width: 320px;
+            padding: 5px;
+        }
+
+        /* Contenitore Intestazione */
+        .header-box {
+            background: white;
+            padding: 5px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 5px;
+        }
+
+        .header-container {
+            position: -webkit-sticky;
+            /* Per compatibilità con Safari */
+            position: sticky;
+            top: 0;
+            /* Punto in cui l'elemento si blocca durante lo scroll */
+            background-color: #ffffff;
+            /* Sfondo obbligatorio per non far sovrapporre il testo che scorre */
+            z-index: 100;
+            /* Assicura che rimanga in primo piano */
+            padding: 10px 0;
+        }
+
+        /* Barra del titolo che contiene il testo e i bottoni */
+        .title-bar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: bottom;
+            flex-wrap: wrap;
+            gap: 0px;
+            margin-bottom: 0px;
+        }
+
+        .title-bar h2 {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+
+            margin: 0;
+
+        }
+
+        .opzioni-box {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 4px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            /* Assicura che i bottoni rimangano sopra gli altri elementi */
+            background-color: #ffffff;
+            /* Sostituisci con il colore del tuo sfondo */
+            padding: 10px 0;
+        }
+
+        .btnModale {
+            padding: 8px 12px;
+            background-color: #f0e54e;
+            color: rgb(47, 10, 213);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+
+        /* Stile dei pulsanti di controllo */
+        .control-btn {
+            justify-content: space-evenly;
+            padding: 8px 12px;
+            color: white;
+            background-color: rgb(54, 6, 245);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            height: 40px;
+            margin-Right: 1px;
+            margin-left: 1px;
+            margin-bottom: 1px;
+            margin-top: 1px;
+            transition: background 0.2s;
+        }
+
+        #btnVista {
+            background-color: #007bff;
+        }
+
+        #btnVista:hover {
+            background-color: #0056b3;
+        }
+
+        #btnSync {
+            background-color: #6c757d;
+        }
+
+        #btnSync:hover {
+            background-color: #5a6268;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        .search-bar:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        .counter {
+            font-size: 14px;
+            color: #666;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+
+        /* Griglia dei libri: si adatta automaticamente */
+        .book-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* Card del libro */
+        .book-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            border-left: 5px solid #007bff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        /* Quando siamo in modalità telefono, stringiamo i testi della card per non farli uscire */
+        .mode-phone .book-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .book-info h4 {
+            margin: 0 0 5px 0;
+            color: #111;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        .book-info p {
+            margin: 0;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .book-pos {
+            background: #e9ecef;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #495057;
+            text-align: right;
+        }
+
+        .mode-phone .book-pos {
+            text-align: left;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #loading {
+            text-align: center;
+            font-weight: bold;
+            color: #007bff;
+            padding: 20px;
+        }
+
+
+        .labCampi {
+            font-size: larger;
+            background: rgb(249, 248, 246);
+            color: #2a08eb;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 2px 4px rgba(4, 230, 200, 0.02);
+            border-left: 5px solid #007bff;
+            display: flex;
+            width: 320px;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+
+        }
+
+        /* Sfondo scuro semitrasparente che blocca tutta la pagina */
+        #loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            /* Oscura lo sfondo */
+            z-index: 9999;
+            /* Lo mette sopra a tutto il resto */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* La rotella ottagonale */
+        .rotella-ottagonale {
+            width: 40px;
+            height: 40px;
+            background-color: transparent;
+
+            /* Crea lo spessore della rotella (puoi cambiare colore qui, es. il tuo blu o arancione) */
+            border: 6px solid #28a745;
+
+            /* Il trucco magico: taglia la forma a forma di ottagono */
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+
+            /* Un bordo colorato diverso su un lato per vedere l'effetto visivo del giramento */
+            border-top-color: #f0ad4e;
+
+            /* Attiva la rotazione continua: dura 1 secondo e si ripete all'infinito */
+            animation: giraOttagono 1s linear infinite;
+        }
+
+        /* Definizione del movimento di rotazione */
+        @keyframes giraOttagono {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<!-- Di base la pagina parte in modalità PC -->
+
+<body id="visualizzatore" class="mode-pc">
+
+    <div class="title-bar">📚 Biblioteca By @LNG 2026<span>
+        </span></div>
+    <div style="display:flex; justify-content: flex-start; border:1px solid blue ">
+        <input style="font-size:medium; border-radius: 10px; border:3px solid #95ed08;" type="number" id="inputBarcode"
+            placeholder="ISBN (solo i numeri)"> <button id="clearISBN">❌</button>
+        <button style="background-color: rgb(196, 228, 255); color:blue" class="control-btn" id="cercaTitolo"
+            onclick="cercaLibroNelDatabase()">Cerca</button>
+    </div>
+
+    <!--------------------------scanner---------------------------------------------->
+    <div id="wrapper-risultato"
+        style="display: none; margin-top: 20px; font-size: 1.2rem; font-weight: bold; color: green;">
+        Codice rilevato: <span id="barcode-result"></span>
+    </div>
+    <div id="wrapper-scanner" style="display:block; margin-top: 20px;">
+        <div id="reader"></div>
+    </div>
+    <!--------------------------fine scanner---------------------------------------------->
+
+    <div id="loader-container" style="display: none;">
+        <div class="rotella-ottagonale"></div>
+        <p style="color: white; margin-top: 15px; font-family: sans-serif;">Operazione in corso...</p>
+    </div>
+    <!--------------------------modale scelta multipla fatta da me------------------------>
+    <!-- Struttura del Modale (nascosto di default) -->
+    <div id="mioModale" style="display: none;">
+        <hr style="border: none; border-top: 2px solid #1e0ddbcc;">
+        <p style="font-size:18px;color:blue" ;>Cosa vuoi fare con il Libro selezionato?</p>
+        <hr style="border: none; border-top: 2px solid #1e0ddbcc;">
+        <button type="button" class="btnModale" id="btnSalva">Rpristina</button>
+        <button type="button" class="btnModale" id="btnElimina">Elimina</button>
+        <button type="button" class="btnModale" id="btnAnnulla">Mantieni</button>
+        <hr style="border: none; border-top: 2px solid #1e0ddbcc;">
+    </div>
+    <!------------------------------------------------------------------------>
+    <div class="opzioni-box" id="opzioni"
+        style="display:flex; display:none; height: 40px; box-sizing: border-box;width:320px;gap:5px;padding:5px;">
+        <select id="menu" style="width:90px">
+            <option style="color:#2f0be6;" value="opzioni">Opzioni</option>
+            <option value="Download">⬇️Download</option>
+            <option value="Verifica">👮Verifica</option>
+            <option value="Upload">⬆️Upload</option>
+            <option value="Nuovo">💾Nuovo</option>
+            <option value="Modifica">📀Modifica</option>
+            <option value="Elimina">❌Elimina</option>
+            <option value="Cestino">🗑️Cestino</option>
+            <option value="BackupFile">💾Backup su file</option>
+            <option value="RestoreFile">📀Restore da File</option>
+            <option value="ResettaApiKey">❌ API key</option>
+            <option value="Log">⏱️Log eventi</option>
+            <option value="ResetLog">❌⏱️Reset Log</option>
+            <option value="Reset">❌Reset Totale</option>
+        </select>
+    </div>
+    <div class="btn-container" style="display: flex; gap: 8px; width: 100%;">
+        <!--------------------------------------------bottoni scanner----------------------------------------------->
+        <button class="control-btn" id="barcode" style="background-color: lightgrey; width: 60px;"
+            onclick="accendiScanner()">🎹</button>
+        <button id="btn-chiudi-scanner" class="control-btn"
+            style="display:none; width: 60px; background-color: lightgrey" onclick="spegniScanner()">❌🎹"</button>
+        <!--------------------------------------------fine bottoni scanner----------------------------------------------->
+        <button id="btnVis" class="control-btn" style="background-color: blue; color:yellow; width: 60px;"
+            onclick="Visualizza()">Lista</button>
+        <button id="btnMostra" style="background-color:#f0ad4e;color:blue; width: 60px;" class="control-btn"
+            onclick="attivaFunzioni()">FUNZ</button>
+        <button id="btnNew" class="control-btn" style="display: none;" onclick="aggiungiLibro()">New</button>
+        <button id="btnMod" class="control-btn" style="display: none; background-color: darkorange;color:blue"
+            onclick="AttivaModifiche()">Mod</button>
+        <button id="btnDel" class="control-btn" style="display: none; background-color: crimson; color: #3fe512;"
+            onclick="delLibro()">Del</button>
+        <button id="btnSync" type="button" class="control-btn" style="display: none; background-color: #0056b3;"
+            onclick="aggiornaDaCloud()">Down</button>
+        <button id="btnUpg" type="button" class="control-btn" style="display: none; background-color: blueviolet;"
+            onclick="aggiornaInCloud()">Upload</button>
+        <button id="btnVer" class="control-btn" type="button"
+            style="display: none; color: #2a08eb; background-color: rgb(49, 236, 7);"
+            onclick="verificaDati()">Verif</button>
+
+        <button id="btnBack" class="control-btn" style="display: none; color: #2a08eb; background-color:yellow;"
+            onclick="backupFile()">Backup</button>
+
+        <button id="btnRest" class="control-btn" style="display: none; color: #2a08eb; background-color:greenyellow;"
+            onclick="document.getElementById('inputRest').click()">Restore</button>
+
+        <button id="btnResettaApiKey" class="control-btn"
+            style="display: none; color: #2a08eb; background-color:greenyellow;" onclick="resettaApiKey">❌API</button>
+
+
+
+        <button id="btnTrash" class="control-btn" style="display: none;" onclick="viewTrash()">Trash
+        </button>
+        <button id="btnLog" type="button" class="control-btn" style="display: none; background-color: #106bec;"
+            onclick="viewLog(event)">Log</button>
+        <button id="btnResetLog" type="button" class="control-btn" style="display: none; background-color: #106bec;"
+            onclick="resetLog(event)">❌Log</button>
+
+        <button id="btnExportTitolo" type="button" class="control-btn" style="display: none;  background-color:
+            #28a745;" onclick="esportaInTestoPerTitolo()">Tit</button>
+        <button id="btnExportAutore" type="button" class="control-btn" style="display: none; background-color: #d9534f;"
+            onclick="esportaInTestoPerAutore()">Aut</button>
+        <!-----------tasto di servizio cambia vista da attivare per debug-->
+        <button id="btnVista" style="display: none" type="button" class="control-btn"
+            onclick="cambiaVisualizzazione()">PC</button>
+        <button id="btnReset" class="control-btn"
+            style="display: none;background-color: rgb(239, 8, 8); color: #f2f3f2;" onclick="resetStorage()">Reset
+        </button>
+        <button id="fullScreen" class="control-btn" onclick="full()"
+            style="width: 60px; background-color: #ecc74d;">🖥️</button>
+    </div>
+    <input type="text" id="search" class="search-bar" placeholder="Cerca per titolo, autore o scaffale..."
+        oninput="filtraLibri()">
+    <div id="counter" class="counter">Caricamento archivio in corso...</div>
+    <div id="loading">Scaricamento libri da Google Drive...</div>
+    <div id="lista" class="book-list" style="display:none"></div>
+    <!-- NUOVO: Il contenitore per la ricerca del TITOLO (identico a quello dell'autore, cambiano solo gli ID) -->
+    <div id="ricercaTitoloModale"
+        style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 2px solid #ccc; padding: 20px; z-index: 9999; box-shadow: 0px 4px 15px rgba(0,0,0,0.2); width: 90%; max-width: 400px; border-radius: 8px;">
+        <div>
+            <h3 style="margin-top: 0;">Seleziona Titolo</h3>
+            <input type="text" id="inputFiltroTitolo" class="labCampi" placeholder="Digita per filtrare i titoli..."
+                style="width: 100%; box-sizing: border-box;">
+        </div>
+
+        <!-- Qui JavaScript inserirà i titoli trovati -->
+        <div id="listaRisultatiTitoli"
+            style="max-height: 200px; overflow-y: auto; margin: 15px 0; border: 1px solid #eee; padding: 5px;">
+        </div>
+
+        <div style="text-align: right;">
+            <button id="btnUsaNuovoTitolo" class="control-btn" style="display:none; margin-right: 5px;">Usa
+                come
+                nuovo</button>
+            <button id="btnChiudiRicercaTitolo" class="control-btn">Annulla</button>
+        </div>
+    </div>
+    <!-- Modale di ricerca posizionata in assoluto sopra la pagina -->
+    <!-- NUOVO: Il contenitore per la ricerca dello Scaffale (identico a quello dell'autore, cambiano solo gli ID) -->
+    <div id="ricercaScaffaleModale"
+        style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 2px solid #ccc; padding: 20px; z-index: 9999; box-shadow: 0px 4px 15px rgba(0,0,0,0.2); width: 90%; max-width: 400px; border-radius: 8px;">
+        <div>
+            <h3 style="margin-top: 0;">Seleziona Scaffale</h3>
+            <input type="text" id="inputFiltroScaffale" class="labCampi"
+                placeholder="Digita per filtrare gli scaffali..." style="width: 100%; box-sizing: border-box;">
+        </div>
+        <!-- Qui JavaScript inserirà gli scaffali trovati -->
+        <div id="listaRisultatiScaffali"
+            style="max-height: 200px; overflow-y: auto; margin: 15px 0; border: 1px solid #eee; padding: 5px;">
+        </div>
+        <div style="text-align: right;">
+            <button id="btnUsaNuovoScaffale" class="control-btn" style="display:none; margin-right: 5px;">Usa
+                come
+                nuovo</button>
+            <button id="btnChiudiRicercaScaffale" class="control-btn">Annulla</button>
+        </div>
+    </div>
+    <!-- Modale di ricerca posizionata in assoluto sopra la pagina -->
+    <div id="ricercaAutoreModale"
+        style="display:none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 2px solid #ccc; padding: 20px; z-index: 9999; box-shadow: 0px 4px 15px rgba(0,0,0,0.2); width: 90%; max-width: 400px; border-radius: 8px;">
+        <div>
+            <h3 style="margin-top: 0;">Cerca Autore</h3>
+            <input type="text" id="inputFiltroAutore" class="labCampi" placeholder="Digita il nome dell'autore..."
+                style="width: 100%; box-sizing: border-box;">
+        </div>
+        <!-- Contenitore risultati ------------------------------------------------->
+        <div id="listaRisultatiAutori"
+            style="max-height: 200px; overflow-y: auto; margin: 15px 0; border: 1px solid #eee; padding: 5px;">
+        </div>
+
+        <div style="text-align: right;">
+            <button id="btnUsaNuovoAutore" class="control-btn" style="display:none; margin-right: 5px;">
+                Usa come nuovo</button>
+            <button id="btnChiudiRicercaAutore" class="control-btn">Annulla</button>
+        </div>
+    </div>
+    <!-- La tua mascherina (con la modifica 'readonly' sull'autore) -->
+    <div id="alert"
+        style="display:none;background-color: rgb(237, 5, 5); border: 1px solid #08cf8d; font-size: 16px; color:#faf5f5; width:320px;border-radius: 10px; text-align: center">
+    </div>
+    <!-------------------------------------finestra nuovo libro e modifiche------------------------------------>
+    <!-------------------------------------finestra nuovo libro e modifiche------------------------------------>
+    <!-------------------------------------finestra nuovo libro e modifiche------------------------------------>
+    <div id="attivamodifiche" style="display:none; max-width:320px;">
+        <button style="display:none" class="control-btn" id="btn-incolla">Incolla dati da Scanner</button>
+        <div style="display:flex; align-items: baseline;"><input type="text" id="isbn" class="labCampi"
+                placeholder="Isbn">
+        </div>
+        <div><input type="text" id="titolo" class="labCampi" placeholder="Titolo"></div>
+        <!-- REASON: readonly impedisce la digitazione diretta e l'apertura della tastiera mobile -->
+        <div style="display:flex; align-items: baseline;"><input type="text" id="autore" class="labCampi"
+                placeholder="Autore (Clicca per cercare)" readonly>
+            <button style="display:none;" class="control-btn" id="m-autore">M</button>
+        </div>
+        <div style="display:flex; align-items: baseline;"><input type="text" id="note" class="labCampi"
+                placeholder="Note">
+            <button style="display:none" class="control-btn" id="m-note">M</button>
+        </div>
+        <div style="display:flex; align-items: baseline;"><input type="text" id="scaffale" class="labCampi"
+                placeholder="Scaffale" readonly>
+            <button style="display:none" class="control-btn" id="m-scaffale">M</button>
+        </div>
+        <div style="display:flex; align-items: baseline;"><input type="number" id="numero" class="labCampi"
+                placeholder="Num. ripiano">
+            <button style="display:none" class="control-btn" id="m-numero">M</button>
+        </div>
+        <div style="display:flex">
+            <button id="OK" class="control-btn" style="width: 120px; display:none">Conferma</button>
+            <div style="width:80px" id="spazio"></div>
+            <button id="ESC" class="control-btn"
+                style="width: 120px; display:none; background-color: greenyellow;color:blue">Resetta</button>
+        </div>
+    </div>
+    <!-------------------------------------fine finestra nuovo libro e modifiche------------------------------------>
+
+    <!-------invisibile ma necessariO SOLO per IL restore------------------------------>-
+    <input type="file" id="inputRest" accept=".json" onchange="restoreFile(event)" style="display:none;">
+    <!------------------------------------------------------------------------------------------------>
+    <script>
+        let memoTitolo = "";
+        let memoAutore = "";
+        let memoISBN = "";
+        let funz;
+
+        document.getElementById("clearISBN").onclick = function () { //attiva bottone ❌ su barcode digitato
+            document.getElementById("inputBarcode").value = "";
+        };
+        document.getElementById("cercaTitolo").onclick = cercaLibroNelDatabase;
+        document.getElementById("menu").onclick = menuSelezione;
+        document.getElementById("btn-incolla").onclick = incollaDatiNelForm;
+        document.getElementById("OK").onclick = confermaFunzione;
+        document.getElementById("ESC").onclick = pulisciCampi;
+
+        //-----------------------
+        function cambiaVisualizzazione(ultima) {
+            const corpo = document.getElementById('visualizzatore');
+            const pulsante = document.getElementById('btnVista');
+            impostaVisibilitaPulsanti("none");
+            document.getElementById("opzioni").style.display = "none";
+            if (!ultima) {
+                ultima = "mode-pc"
+            };
+            if (ultima === "mode-pc") {
+                if (corpo.classList.contains('mode-pc')) {
+                    corpo.classList.remove('mode-pc');
+                    corpo.classList.add('mode-phone');
+                    pulsante.innerText = "Mob";
+                    pulsante.style.backgroundColor = "#28a745"; // Verde per smartphone
+                } else {
+                    corpo.classList.remove('mode-phone');
+                    corpo.classList.add('mode-pc');
+                    pulsante.innerText = "PC";
+                    pulsante.style.backgroundColor = "#007bff"; // Blu per PC
+                }
+            }
+        }
+        //---------
+        function resetMenu() {
+            setTimeout(reimposta, 1000);
+            function reimposta() {
+                document.getElementById("menu").value = "opzioni";
+            }
+        }
+        function menuSelezione() {
+            //console.log(menu.value);
+            if (menu.value === "Download") { aggiornaDaCloud(), resetMenu() };
+            if (menu.value === "Upload") { aggiornaInCloud(), resetMenu() };
+            if (menu.value === "Verifica") { verificaDati(), resetMenu() };
+            if (menu.value === "Nuovo") { aggiungiLibro(), resetMenu() };
+            if (menu.value === "Modifica") { AttivaModifiche(), resetMenu() };
+            if (menu.value === "Elimina") { delLibro(), resetMenu() };
+            if (menu.value === "Cestino") { viewTrash(), resetMenu() };
+            if (menu.value === "Reset") { resetStorage(), resetMenu() };
+            if (menu.value === "Log") { viewLog(), resetMenu() };
+            if (menu.value === "ResettaApiKey") { resettaApiKey(), resetMenu() };
+            // tasti particolari che puntano al click su input fantasma----------------
+            if (menu.value === "BackupFile") {
+                backupFile(); resetMenu();
+            }
+            if (menu.value === "RestoreFile") {
+                document.getElementById('inputRest').click();
+                resetMenu()
+            };
+        }
+        //----------------------------------------------------------------------
+        async function attivaFunzioni() {
+            funz = "mostra";
+            document.getElementById("lista").style.display = "none";
+            let btnNew = document.getElementById("btnNew");
+            let opzioni = document.getElementById("opzioni");
+            // 1. Se i pulsanti sono già VISIBILI, l'utente vuole solo nasconderli.
+            // In questo caso NON chiediamo la password, li spegniamo e basta!
+            if (btnNew.style.display === "inline-block") {
+                impostaVisibilitaPulsanti("none");
+                return;
+            }
+            if (opzioni.style.display === "inline-block") {
+                document.getElementById("opzioni").style.display = "none";
+                return;
+            }
+            // 2. Se i pulsanti sono NASCOSTI, l'utente vuole accedere alle funzioni avanzate.
+            // Chiediamo il pass al centralino Cloud!
+            const pswOk = await verificaPasswordRemota();
+            if (!pswOk) return; // Se la password è fallita o ha annullato, ci fermiamo qui.
+            okPsw();
+            if (typeof vMess === "function") vMess("Modalità Amministratore Attiva!", 2000);
+        }
+        // Una micro-funzione di supporto per evitare di ripetere 8 volte lo style.display
+        function okPsw() {
+            let vista = document.getElementById("btnVista").textContent;
+            console.log(vista);
+            if (vista === "PC") {
+                document.getElementById("opzioni").style.display = "none";
+                impostaVisibilitaPulsanti("inline-block");
+            } else {
+                document.getElementById("opzioni").style.display = "inline-block";
+                impostaVisibilitaPulsanti("none");
+            }
+        }
+        function impostaVisibilitaPulsanti(stato) {
+            document.getElementById("btnSync").style.display = stato;
+            document.getElementById("btnUpg").style.display = stato;
+            document.getElementById("btnVer").style.display = stato;
+            document.getElementById("btnNew").style.display = stato;
+            document.getElementById("btnMod").style.display = stato;
+            document.getElementById("btnDel").style.display = stato;
+            document.getElementById("btnTrash").style.display = stato;
+            document.getElementById("btnReset").style.display = stato;
+            document.getElementById("btnLog").style.display = stato;
+            document.getElementById("btnResetLog").style.display = stato;
+            document.getElementById("btnBack").style.display = stato;
+            document.getElementById("btnRest").style.display = stato;
+            document.getElementById("btnExportTitolo").style.display = stato;
+            document.getElementById("btnExportAutore").style.display = stato;
+            document.getElementById("btnResettaApiKey").style.display = stato;
+        }
+        //----------------------------------------------salva dati modificati o aggiunti--------------------------
+
+        let mNote = document.getElementById("m-note");
+        mNote.onclick = () => {
+            document.getElementById("note").value = mNote.value;
+        }
+        let mScaffale = document.getElementById("m-scaffale");
+        mScaffale.onclick = () => {
+            document.getElementById("scaffale").value = mScaffale.value;
+        }
+        let mNumero = document.getElementById("m-numero");
+        mNumero.onclick = () => {
+            document.getElementById("numero").value = mNumero.value;
+        }
+        let mAutore = document.getElementById("m-autore");
+        mAutore.onclick = () => {
+            document.getElementById("autore").value = mAutore.value;
+        }
+        //----------------------------------------------------------------------------
+        function newLibro() {
+            let addLibro = {};
+            addLibro.isbn = document.getElementById("isbn").value;
+            addLibro.titolo = document.getElementById("titolo").value;
+            addLibro.autore = document.getElementById("autore").value;
+            mAutore.value = addLibro.autore;
+            if (mAutore.value) {
+                document.getElementById("m-autore").style.display = "block";
+                mAutore.title = mAutore.value;
+            }
+            //----tasto memo autore-----------------------------------------
+            addLibro.note = document.getElementById("note").value;
+            mNote.value = addLibro.note;
+            //----tasto memo note
+            if (mNote.value) {
+                document.getElementById("m-note").style.display = "block";
+                mNote.title = mNote.value;
+            }
+            addLibro.scaffale = document.getElementById("scaffale").value;
+            mScaffale.value = addLibro.scaffale;
+            //----------tasto memo scaffale
+            if (mScaffale.value) {
+                document.getElementById("m-scaffale").style.display = "block";
+                mScaffale.title = mScaffale.value;
+            }
+            addLibro.numero = document.getElementById("numero").value;
+            mNumero.value = addLibro.numero;
+            //----------------tasto memo numero
+            if (mNumero.value) {
+                document.getElementById("m-numero").style.display = "block";
+                mNumero.title = mNumero.value;
+            }
+            //console.log(addLibro);
+            const libri = localStorage.getItem("archivio_libri");
+            const librix = libri ? JSON.parse(libri) : [];
+            librix.push(addLibro);
+            localStorage.setItem("archivio_libri", JSON.stringify(librix));
+            document.getElementById("attivamodifiche").style.display = "none";
+            vMess("Libro salvato con successo!", 2500);
+            afterSave();
+            setTimeout(pulisciCampi, 500);
+            DATABASE_LOCALE = librix;
+            mostraLibri(DATABASE_LOCALE);
+        }
+        function confermaFunzione() {
+            //console.log("salvadati");
+            if (funz === "nuovo") {
+                newLibro();
+            };
+            if (funz === "modifica") {
+                let scelta = confirm("Vuoi davvero procedere con la modifica?")
+                if (scelta) {
+                    //console.log("Azione confermata");
+                    const libri = localStorage.getItem("archivio_libri");
+                    const librix = libri ? JSON.parse(libri) : [];
+                    //let libroDaModificare = librix[indice];
+                    librix.splice(indice, 1);
+                    localStorage.setItem("archivio_libri", JSON.stringify(librix));
+                    vMess("Libro Modificato con successo!", 3500);
+                    newLibro();
+                    pulisciCampi();
+                    //libroDaModificare = {};
+                } else {
+                    console.log("Azione annullata");
+                }
+                //-----------------------------------------
+            };
+            if (funz === "elimina") {
+                let scelta = confirm("Vuoi davvero procedere con l'eliminazione?")
+                if (scelta) {
+                    //console.log("Azione confermata");
+                    const libri = localStorage.getItem("archivio_libri");
+                    const librix = libri ? JSON.parse(libri) : [];
+                    const trash = localStorage.getItem("archivio_trash")
+                    const trashx = trash ? JSON.parse(trash) : [];
+                    registraLog(`Eliminato: ${librix[indice].titolo} - ${librix[indice].autore} - ${librix[indice].scaffale}${librix[indice].numero}`);
+                    let daCancellare = librix[indice];
+                    trashx.push(daCancellare);
+                    localStorage.setItem("archivio_trash", JSON.stringify(trashx));
+                    librix.splice(indice, 1);
+                    localStorage.setItem("archivio_libri", JSON.stringify(librix));
+                    pulisciCampi();
+                    vMess("Libro Cancellato con successo!", 2500);
+                    libri = localStorage.getItem("archivio_libri");
+                    librix = libri ? JSON.parse(libri) : [];
+                    DATABASE_LOCALE = librix;
+                    mostraLibri(DATABASE_LOCALE);
+                } else {
+                    console.log("Azione annullata");
+                    vMess("Azione annullata!", 3502);
+                }
+            };
+        };
+        function pulisciCampi() {
+            indice;
+            document.getElementById("isbn").value = "";
+            document.getElementById("titolo").value = "";
+            document.getElementById("autore").value = "";
+            document.getElementById("note").value = "";
+            document.getElementById("scaffale").value = "";
+            document.getElementById("numero").value = "";
+            document.getElementById("attivamodifiche").style.display = 'none';
+            document.getElementById("alert").style.display = 'none';
+        }
+        //---------------------------------------------------------------------------------------------------------
+        function AttivaModifiche() {
+            funz = "modifica";
+            document.getElementById("lista").style.display = 'none';
+            document.getElementById("attivamodifiche").style.display = 'grid';
+            document.getElementById("alert").style.display = "block";
+            document.getElementById("alert").textContent = `Modifica Libro in corso...`;
+            document.getElementById("OK").style.display = "block";
+            document.getElementById("ESC").style.display = "block";
+
+        };
+        function aggiungiLibro() {
+            funz = "nuovo";
+            document.getElementById("lista").style.display = 'none';
+            document.getElementById("attivamodifiche").style.display = 'grid';
+            document.getElementById("alert").style.display = "block";
+            document.getElementById("alert").textContent = `Inserimento Nuovo Libro in corso...`;
+            document.getElementById("OK").style.display = "block";
+            document.getElementById("ESC").style.display = "block";
+        };
+        function delLibro() {
+            funz = "elimina";
+            document.getElementById("lista").style.display = 'none';
+            document.getElementById("attivamodifiche").style.display = 'grid';
+            document.getElementById("alert").style.display = "block";
+            document.getElementById("alert").style.backgroundColor = "red";
+            document.getElementById("alert").style.color = "white";
+            document.getElementById("alert").textContent = `Cancellazione Libro in corso...`;
+            document.getElementById("OK").style.display = "block";
+            document.getElementById("ESC").style.display = "block";
+            //console.log(indice);
+
+        };
+        //reset totale archivi localStorage---------------------------------------------------
+        function resetStorage() {
+            let scelta = confirm("Attenzione! vuoi cancellare tutti gli archivi locali, libri, backup, autori, scaffali");
+            if (scelta) {
+                registraLog("reset archivi locali");
+                localStorage.removeItem("archivio_libri");
+                localStorage.removeItem("archivio_libri");
+                localStorage.removeItem("autori");
+                localStorage.removeItem("dove");
+                vMess("libri, backup, autori e dove - resettato!", 3600);
+                //alert("autori e dove resettati con successo!");
+            } else {
+                vMess("Cancellazione annullata dall'utente!", 3500);
+            }
+        }
+        // ---------------------fine provvisorio test----------------------
+        function vMess(error, time) {
+            document.getElementById("alert").style.display = "block";
+            document.getElementById("alert").textContent = error;
+            let cRosso = "#ff0500";
+            let cVerde = "#00ff00"
+            let cBleu = "#0000ff"
+            if (time >= 0 && time <= 3500) {
+                document.getElementById("alert").style.backgroundColor = cVerde;
+                document.getElementById("alert").style.color = cBleu;
+                document.getElementById("alert").style.fontSize = "bold";
+            };
+            if (time > 3501) { document.getElementById("alert").style.backgroundColor = cRosso };
+
+            setTimeout(() => {
+                document.getElementById("alert").style.display = "none";
+                document.getElementById("alert").textContent = ""
+            }, time);
+        }
+        //---------------------------------------inizio titolo---------------------------------------------------------------
+        // 1. Selezioniamo gli elementi del DOM per Titolo
+        const campoTitoloPrincipale = document.getElementById('titolo');
+        const modaleTitolo = document.getElementById('ricercaTitoloModale');
+        const inputFiltroTitolo = document.getElementById('inputFiltroTitolo');
+        const listaRisultatiTitoli = document.getElementById('listaRisultatiTitoli');
+        const btnUsaNuovoTitolo = document.getElementById('btnUsaNuovoTitolo');
+        const btnChiudiRicercaTitolo = document.getElementById('btnChiudiRicercaTitolo');
+
+        // 2. APERTURA: Clic sul campo titolo della mascherina
+        campoTitoloPrincipale.addEventListener('click', function () {
+            modaleTitolo.style.display = 'block';
+            inputFiltroTitolo.value = '';
+            mostraTitoliFiltrati(''); // Mostra subito tutti gli scaffali disponibili
+            inputFiltroTitolo.focus();
+        });
+
+        // 3. CHIUSURA: Clic su annulla
+        btnChiudiRicercaTitolo.addEventListener('click', function () {
+            modaleTitolo.style.display = 'none';
+        });
+
+        // 4. DIGITAZIONE: Filtro in tempo reale
+        inputFiltroTitolo.addEventListener('input', function () {
+            mostraTitoliFiltrati(inputFiltroTitolo.value);
+        });
+
+        // 5. PULSANTE NUOVO: Se lo scaffale digitato non esiste
+        btnUsaNuovoTitolo.addEventListener('click', function () {
+            campoTitoloPrincipale.value = inputFiltroTitolo.value.toUpperCase();
+            modaleTitolo.style.display = 'none';
+        });
+
+        // 6. LA FUNZIONE DI FILTRARE E MOSTRARE I DATI
+        let indice;
+        function mostraTitoliFiltrati(testoDaCercare) {
+            listaRisultatiTitoli.innerHTML = '';
+            // REASON: Leggiamo dalla chiave "archivio_libri" che contiene l'elenco dei libri---------------------
+            const libri = localStorage.getItem("archivio_libri");
+            const librix = libri ? JSON.parse(libri) : [];
+            //console.log(librix);
+            const query = testoDaCercare.toLowerCase().trim();
+            let trovato = false;
+            librix.forEach(function (libro, index) {
+                if (query === '' || libro.titolo.toLowerCase().includes(query)) {
+                    trovato = true;
+                    const rigaTitolo = document.createElement('div');
+                    rigaTitolo.textContent = libro.titolo;
+                    //console.log(rigaTitolo.textContent);
+                    // Applichiamo lo stesso stile grafico usato per l'autore (linea verde stavolta, giusto per distinguerli!)
+                    rigaTitolo.style.padding = '10px';
+                    rigaTitolo.style.margin = '5px 0';
+                    rigaTitolo.style.background = '#f4f4f4';
+                    rigaTitolo.style.borderLeft = '4px solid #28a745'; // Linea verde per lo scaffale
+                    rigaTitolo.style.cursor = 'pointer';
+                    rigaTitolo.style.borderRadius = '0 4px 4px 0';
+
+                    rigaTitolo.addEventListener('mouseover', function () { rigaTitolo.style.background = '#e9e9e9'; });
+                    rigaTitolo.addEventListener('mouseout', function () { rigaTitolo.style.background = '#f4f4f4'; });
+
+                    // SELEZIONE: Clic sul libro trovato
+                    rigaTitolo.addEventListener('click', function () {
+                        campoTitoloPrincipale.value = libro.titolo; // Copia il valore nel modulo principale
+                        document.getElementById("isbn").value = libro.isbn;
+                        document.getElementById("autore").value = libro.autore;
+                        document.getElementById("scaffale").value = libro.scaffale;
+                        document.getElementById("note").value = libro.note;
+                        document.getElementById("numero").value = libro.numero;
+                        indice = index;
+                        console.log(indice);
+                        modaleTitolo.style.display = 'none';         // Chiude la modale di ricerca
+                    });
+                    listaRisultatiTitoli.appendChild(rigaTitolo);
+                }
+            });
+            // Gestione elemento non trovato
+            if (!trovato && query.length > 0) {
+                btnUsaNuovoTitolo.style.display = 'block';
+                btnUsaNuovoTitolo.textContent = `Usa "${testoDaCercare}" come nuovo Titolo`;
+            } else {
+                btnUsaNuovoTitolo.style.display = 'none';
+            }
+        }
+        //----------------------------------fine titolo--------------------------------------------------------
+        //---------------------inizio scaffale-----------------------------------------------------------------
+        // 1. Selezioniamo gli elementi del DOM per lo Scaffale
+        const campoScaffalePrincipale = document.getElementById('scaffale');
+        const modaleScaffale = document.getElementById('ricercaScaffaleModale');
+        const inputFiltroScaffale = document.getElementById('inputFiltroScaffale');
+        const listaRisultatiScaffali = document.getElementById('listaRisultatiScaffali');
+        const btnUsaNuovoScaffale = document.getElementById('btnUsaNuovoScaffale');
+        const btnChiudiRicercaScaffale = document.getElementById('btnChiudiRicercaScaffale');
+
+        // 2. APERTURA: Clic sul campo scaffale della mascherina
+        campoScaffalePrincipale.addEventListener('click', function () {
+            modaleScaffale.style.display = 'block';
+            inputFiltroScaffale.value = '';
+            mostraScaffaliFiltrati(''); // Mostra subito tutti gli scaffali disponibili
+            inputFiltroScaffale.focus();
+        });
+
+        // 3. CHIUSURA: Clic su annulla
+        btnChiudiRicercaScaffale.addEventListener('click', function () {
+            modaleScaffale.style.display = 'none';
+        });
+        // 4. DIGITAZIONE: Filtro in tempo reale
+        inputFiltroScaffale.addEventListener('input', function () {
+            mostraScaffaliFiltrati(inputFiltroScaffale.value);
+        });
+        // 5. PULSANTE NUOVO: Se lo scaffale digitato non esiste
+        btnUsaNuovoScaffale.addEventListener('click', function () {
+            campoScaffalePrincipale.value = inputFiltroScaffale.value;
+            let newScaffale = inputFiltroScaffale.value;
+            let datiScaf = localStorage.getItem("dove");
+            let dovey = datiScaf ? JSON.parse(datiScaf) : [];
+            dovey.push(newScaffale.toUpperCase().trim());
+            localStorage.setItem("dove", JSON.stringify(dovey));
+            modaleScaffale.style.display = 'none';
+        });
+        function mostraScaffaliFiltrati(testoDaCercare) {
+            listaRisultatiScaffali.innerHTML = '';
+
+            const datiSalvati = localStorage.getItem("dove");
+            const doveX = datiSalvati ? JSON.parse(datiSalvati) : [];
+
+            const query = testoDaCercare.toLowerCase().trim().replace(/\s+/g, '-');
+
+            let trovato = false;
+
+            console.log("Testo cercato (query): '" + query + "' (Lunghezza: " + query.length + ")");
+
+            doveX.forEach(function (singoloScaffale) {
+                // REASON: Sicurezza. Se per errore l'elemento non è una stringa valida, lo saltiamo o lo convertiamo in testo
+                if (!singoloScaffale) return;
+                const stringaScaffale = String(singoloScaffale).trim();
+
+                if (query === '' || stringaScaffale.toLowerCase().includes(query)) {
+                    trovato = true;
+
+                    const rigaScaffale = document.createElement('div');
+                    rigaScaffale.textContent = stringaScaffale;
+
+                    // Stile grafico
+                    rigaScaffale.style.padding = '10px';
+                    rigaScaffale.style.margin = '5px 0';
+                    rigaScaffale.style.background = '#f4f4f4';
+                    rigaScaffale.style.borderLeft = '4px solid #28a745';
+                    rigaScaffale.style.cursor = 'pointer';
+                    rigaScaffale.style.borderRadius = '0 4px 4px 0';
+
+                    rigaScaffale.addEventListener('mouseover', function () { rigaScaffale.style.background = '#e9e9e9'; });
+                    rigaScaffale.addEventListener('mouseout', function () { rigaScaffale.style.background = '#f4f4f4'; });
+
+                    rigaScaffale.addEventListener('click', function () {
+                        campoScaffalePrincipale.value = stringaScaffale;
+                        modaleScaffale.style.display = 'none';
+                    });
+
+                    listaRisultatiScaffali.appendChild(rigaScaffale);
+                }
+            });
+
+            // Controllo finale stampato chiaramente per il debug
+            console.log("Resoconto finale -> Trovato: " + trovato + " | Query vuota? " + (query.length === 0));
+
+            // Gestione elemento non trovato
+            if (!trovato && query.length > 0) {
+                btnUsaNuovoScaffale.style.display = 'block';
+                btnUsaNuovoScaffale.textContent = `Usa "${testoDaCercare}" come nuovo scaffale`;
+
+            } else {
+                btnUsaNuovoScaffale.style.display = 'none';
+            }
+        }
+        //-------------------------------------------------------fine scaffale---------------------------------
+        //-------------------------------------------------------autore---------------------------------
+        // 1. Selezioniamo gli elementi del DOM che ci servono
+        const campoAutorePrincipale = document.getElementById('autore');
+        const modaleAutore = document.getElementById('ricercaAutoreModale');
+        const inputFiltroAutore = document.getElementById('inputFiltroAutore');
+        const btnChiudiRicercaAutore = document.getElementById('btnChiudiRicercaAutore');
+        // 2. GESTIONE APERTURA: Quando l'utente clicca sul campo autore
+        campoAutorePrincipale.addEventListener('click', function () {
+            modaleAutore.style.display = 'block';
+            inputFiltroAutore.value = ''; // Svuota il campo di ricerca
+            // REASON: Mostra subito tutti gli autori disponibili non appena si apre la finestra, senza aspettare la digitazione
+            mostraAutoriFiltrati('');
+            inputFiltroAutore.focus(); // Mette il cursore pronto a scrivere
+        });
+        // 3. GESTIONE CHIUSURA: Quando l'utente clicca su Annulla
+        btnChiudiRicercaAutore.addEventListener('click', function () {
+            modaleAutore.style.display = 'none';
+        });
+        //-------------------------------------------------------------------------------------
+        // Selezioniamo anche i nuovi elementi per la lista e il pulsante "Nuovo"
+        const listaRisultatiAutori = document.getElementById('listaRisultatiAutori');
+        const btnUsaNuovoAutore = document.getElementById('btnUsaNuovoAutore');
+        // FUNZIONE REASON: Recupera i dati freschi dal localStorage, li filtra e genera i pulsanti a schermo
+        function mostraAutoriFiltrati(testoDaCercare) {
+            // 1. Svuota tassativamente la lista precedente
+            listaRisultatiAutori.innerHTML = '';
+            // 2. Recupera l'array dal localStorage
+            const datiSalvati = localStorage.getItem("autori");
+            const autorix = datiSalvati ? JSON.parse(datiSalvati) : [];
+            // Puliamo il testo cercato (tutto in minuscolo e senza spazi vuoti prima e dopo)
+            const query = testoDaCercare.toLowerCase().trim();
+            let trovato = false;
+            // 3. Ciclo di controllo sugli autori
+            autorix.forEach(function (singoloAutore) {
+                // Se la ricerca è vuota, mostriamo l'autore. Se c'è testo, verifichiamo la corrispondenza
+                if (query === '' || singoloAutore.toLowerCase().includes(query)) {
+                    trovato = true;
+                    // Creiamo il pulsante/riga per l'autore
+                    const rigaAutore = document.createElement('div');
+                    rigaAutore.textContent = singoloAutore;
+
+                    // Stile grafico della riga (per renderlo chiaramente un elemento cliccabile)
+                    rigaAutore.style.padding = '10px';
+                    rigaAutore.style.margin = '5px 0';
+                    rigaAutore.style.background = '#f4f4f4';
+                    rigaAutore.style.borderLeft = '4px solid #007bff'; // Una linea blu sottile a sinistra
+                    rigaAutore.style.cursor = 'pointer';
+                    rigaAutore.style.borderRadius = '0 4px 4px 0';
+
+                    // Effetto hover visivo veloce al passaggio del mouse
+                    rigaAutore.addEventListener('mouseover', function () { rigaAutore.style.background = '#e9e9e9'; });
+                    rigaAutore.addEventListener('mouseout', function () { rigaAutore.style.background = '#f4f4f4'; });
+
+                    // Quando si clicca l'autore trovato
+                    rigaAutore.addEventListener('click', function () {
+                        campoAutorePrincipale.value = singoloAutore; // Assegna il valore al modulo principale
+                        modaleAutore.style.display = 'none';       // Chiude la modale di ricerca
+                    });
+
+                    listaRisultatiAutori.appendChild(rigaAutore);
+                }
+            });
+            // 4. Se quello che cerchi non c'è, mostra il pulsante "Usa come nuovo"
+            if (!trovato && query.length > 0) {
+                btnUsaNuovoAutore.style.display = 'block';
+                btnUsaNuovoAutore.textContent = `Usa "${testoDaCercare}" come nuovo`;
+            } else {
+                btnUsaNuovoAutore.style.display = 'none';
+            }
+        }
+        //---------------------
+        // REASON: Ascolta ogni singola lettera digitata dall'utente e aggiorna la ricerca istantaneamente
+        inputFiltroAutore.addEventListener('input', function () {
+            mostraAutoriFiltrati(inputFiltroAutore.value);
+        });
+        // Gestione del pulsante "Usa come nuovo" se l'autore non esiste
+        btnUsaNuovoAutore.addEventListener('click', function () {
+            // Prende esattamente il testo digitato nella ricerca e lo sposta sul modulo principale
+            campoAutorePrincipale.value = inputFiltroAutore.value;
+            let newAutore = inputFiltroAutore.value
+            let datiSalv = localStorage.getItem("autori");
+            let autoriy = datiSalv ? JSON.parse(datiSalv) : [];
+            autoriy.push(newAutore.toUpperCase().trim());
+            localStorage.setItem("autori", JSON.stringify(autoriy));
+            modaleAutore.style.display = 'none';
+        });
+        //-------------------------------------------------------------------------------------------
+        const scriptUrl =
+            "https://script.google.com/macros/s/AKfycbyy2Qk94jsf68BfisakBLepnF6bDkBrFsr-zUHak79FVt6REIoSSuc56NUKTHpsN-4atw/exec";
+        let DATABASE_LOCALE = [];
+        // 1. FUNZIONE DI AVVIO: Decide da dare i dati
+        async function inizializzaApp() {
+            setTimeout(dispo, 100);
+            let noScan = document.getElementById("barcode-result").value;
+            const datiSalvati = localStorage.getItem("archivio_libri");
+            if (datiSalvati) {
+                console.log("Caricamento da localStorage (Velocità Lampo!)");
+                DATABASE_LOCALE = JSON.parse(datiSalvati);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('search').disabled = false;
+                mostraLibri(DATABASE_LOCALE);
+            } else {
+                console.log("localStorage vuoto. Vado su Google Drive...");
+                vMess("localStorage vuoto. Vado su Google Drive...", 3502);
+                console.log("sono qui a scaricare");
+                await scaricaDatiDaCloud();
+            }
+        }
+        //--------------------------------------------------------------funzioni--------
+        function Visualizza() {
+            funz = "vis";
+            document.getElementById("lista").style.display = 'grid';
+            const barraRicerca = document.getElementById('search');
+            if (barraRicerca.value !== "") {
+                barraRicerca.value = "";
+            }
+            document.getElementById("attivamodifiche").style.display = 'none';
+            document.getElementById("alert").style.display = 'none';
+            const librix = localStorage.getItem("archivio_libri")
+            DATABASE_LOCALE = JSON.parse(librix);
+            mostraLibri(DATABASE_LOCALE);
+            pulisciCampi();
+        };
+        // Funzione per cambiare modalità (PC <-> Smartphone)
+        //----------------------------------------------------------download-------------
+        // 2. FUNZIONE ONLINE: Scarica da Drive e memorizza localmente
+        async function scaricaDatiDaCloud() {
+            // 1. PRIMA DI PARTIRE: Attiviamo i testi e facciamo girare la rotella
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('loading').innerText = "Sincronizzazione con Google Drive in corso...";
+            document.getElementById('search').disabled = true;
+            mostraLoader(); // <-- ACCENDIAMO LA ROTELLA QUI
+            try {
+                // Il browser aspetta attivamente la risposta da Drive mentre la rotella gira
+                const response = await fetch(scriptUrl);
+                let data = await response.text();
+                const jsonConvertito = JSON.parse(data);
+                let libriScaricati = [];
+                if (Array.isArray(jsonConvertito)) {
+                    libriScaricati = jsonConvertito;
+                } else if (jsonConvertito.libri) {
+                    libriScaricati = jsonConvertito.libri;
+                }
+                libriScaricati.sort((a, b) => {
+                    if (!a.titolo) return 1;
+                    if (!b.titolo) return -1;
+                    return a.titolo.localeCompare(b.titolo);
+                });
+                localStorage.setItem("archivio_libri", JSON.stringify(libriScaricati));
+                DATABASE_LOCALE = libriScaricati;
+                localStorage.removeItem("autori"); //resetta gli archivi locali e si ricreano al volo
+                localStorage.removeItem("dove"); //resetta gli archivi locali e si ricreano al volo
+                // 2. OPERAZIONE COMPLETATA CON SUCCESSO: Ripristiniamo lo schermo e spegniamo la rotella
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('search').disabled = false;
+                nascondiLoader();
+                registraLog("download");
+                mostraLibri(DATABASE_LOCALE);
+            } catch (errore) {
+                // 3. SE QUALCOSA VA STORTO: Spegniamo SUBITO la rotella e sblocchiamo i comandi
+                nascondiLoader(); // <-- SPEGNIAMO LA ROTELLA ANCHE QUI (fondamentale!)
+                document.getElementById('search').disabled = false; // Sistemato: evita il blocco permanente
+                document.getElementById('loading').innerText = "Errore nel download dal Cloud.";
+                document.getElementById('counter').innerText = "Errore: " + errore.message;
+                console.error(errore);
+            }
+        }
+        //--------------------------------------------------ripristina da backup locale------------
+        // 3. FUNZIONE PULSANTE: Forza lo svuotamento della cache e riscarica tutto
+        async function aggiornaDaCloud() {
+            funz = "download";
+            let scelta = confirm("Download da Drive, perderai le modifiche locali, se non già salvate?")
+            if (!scelta) return;
+            const pswOk = await verificaPasswordRemota();
+            if (!pswOk) return;
+            try {
+                await scaricaDatiDaCloud();
+            } catch (errore) {
+                console.error("Errore di verifica:", errore);
+                alert("Errore di connessione durante la verifica della password cloud.");
+            }
+        }
+        //-----------------------------------------------------------------------------------------------
+        function mostraLibri(listaDaMostrare) {
+            //document.getElementById('lista').style.display = 'grid';
+            // 1. Mostriamo IMMEDIATAMENTE la rotella
+            //if (funz === "vis") mostraLoader();
+            listaDaMostrare.sort((a, b) => a.titolo.localeCompare(b.titolo));
+            // 2. Usiamo setTimeout per spingere il ciclo pesante nella coda degli eventi.
+            // Questo trucco da un istante di respiro al browser per disegnare la rotella a schermo.
+            setTimeout(() => {
+                const contenitore = document.getElementById('lista');
+                const contatore = document.getElementById('counter');
+
+                let dovem = JSON.parse(localStorage.getItem("dove") || "[]");
+                let autorix = JSON.parse(localStorage.getItem("autori") || "[]");
+
+                contenitore.innerHTML = "";
+                contatore.innerText = `Pronti: ${listaDaMostrare.length} su ${DATABASE_LOCALE.length} libri`;
+
+                // Ciclo pesante che crea le card dei libri
+                listaDaMostrare.forEach(function (libro, index) {
+                    //---crea tabella collocazioni fresca------------------
+                    if (!dovem.includes(libro.scaffale)) {
+                        //   dovem.push(libro.scaffale.replace(/\s+/g, '-'));
+                        dovem.push(libro.scaffale);
+                    }
+                    //--------------autori---------------------------------
+                    if (!autorix.includes(libro.autore)) {
+                        autorix.push(libro.autore);
+                    }
+                    //--------------------Creazione Card-------------------
+                    const card = document.createElement('div');
+                    card.className = 'book-card';
+                    card.style.display = "inline-block";
+
+                    // 1. CREAZIONE E STILIZZAZIONE DEL BOTTONE
+                    let btnSel = document.createElement("button");
+
+                    btnSel.style.border = "solid";
+                    btnSel.style.borderRadius = "10px";
+                    btnSel.style.borderRadius = "10px";
+                    btnSel.style.backgroundColor = "blue";
+                    btnSel.style.color = "white";
+                    btnSel.style.cursor = 'pointer';
+                    btnSel.textContent = "Seleziona";
+                    btnSel.style.textAlign = "left";
+                    btnSel.style.fontSize = "bold";
+                    //btnSel.style.width = "50px";
+                    //btnSel.style.height = "20px";
+                    btnSel.style.display = "inline-flex"; // "inline-flex" è meglio per stare di fianco al testo
+                    btnSel.style.alignItems = 'center';
+                    btnSel.style.marginRight = "8px";   // Distanzia un po' il bottone dal nome dell'autore
+                    if (funz !== "trash") {
+                        btnSel.style.display = "none";
+                    }
+                    // Gestione del click sul bottone
+                    btnSel.onclick = (e) => {
+                        //nascondiLoader();
+                        e.stopPropagation();
+                        console.log("indice... =" + index);
+                        undelTrash(index);
+                    }
+
+                    // 2. CREAZIONE DEL BLOCCO INFO CON IL SEGNAPOSTO
+                    const info = document.createElement('div');
+                    info.className = 'book-info';
+
+                    // <span class="slot-bottone"></span> è il nostro passpartout!
+                    info.innerHTML = `<h4>${libro.titolo}</h4>
+    <p><span class="slot-bottone"></span>${libro.autore}</p>
+    <p>ISBN:${libro.isbn}<span>Note:${libro.note}</span></p>`;
+
+                    // 3. INNESTO CHIRURGICO DEL BOTTONE DENTRO IL SEGNAPOSTO
+                    // Cerchiamo lo span vuoto appena creato dentro 'info' e gli appendiamo il bottone
+                    info.querySelector('.slot-bottone').appendChild(btnSel);
+
+                    // 4. POSIZIONE E COMPOSIZIONE FINALE DELLA CARD
+                    const pos = document.createElement('div');
+                    pos.className = 'book-pos';
+                    pos.style.textAlign = "left";
+                    pos.innerHTML = `${libro.scaffale} <br><span style="color:#007bff">N. ${libro.numero}</span>`;
+
+                    // Componiamo la card nell'ordine corretto (senza btnSel volante all'inizio)
+                    card.appendChild(info);
+                    card.appendChild(pos);
+                    contenitore.appendChild(card);
+                })
+                // 3. Il lavoro è FINITO: adesso possiamo nascondere la rotella e salvare
+                if (funz === "vis") //nascondiLoader();
+                    setTimeout(() => {
+                        localStorage.removeItem("dove");
+                        localStorage.setItem("dove", JSON.stringify(dovem));
+                        localStorage.removeItem("autori");
+                        localStorage.setItem("autori", JSON.stringify(autorix));
+                    }, 50);
+            }, 100); // 50 millisecondi di ritardo sono impercettibili all'occhio umano, ma vitali per il browser!
+        };
+        //---------------------------------------
+        function filtraLibri() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const libriFiltrati = DATABASE_LOCALE.filter(libro => {
+                return (libro.titolo && libro.titolo.toLowerCase().includes(query)) ||
+                    (libro.autore && libro.autore.toLowerCase().includes(query)) ||
+                    (libro.scaffale && libro.scaffale.toLowerCase().includes(query));
+            });
+            mostraLibri(libriFiltrati);
+        }
+        //-------------------------------------------------------------------------------------
+        window.onload = inizializzaApp;
+        //------------------------------------------------------salva su cloud-------------------
+        async function aggiornaInCloud() {
+            let scelta = confirm("Vuoi davvero sovrascrivere il database su Google Drive con i dati locali?")
+            if (!scelta) return;
+            const pswOk = await verificaPasswordRemota();
+            if (!pswOk) return;
+            console.log("ok travasa");
+            mostraLoader();
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = 'block';
+            loadingDiv.innerText = "Sincronizzazione in corso... Sto aggiornando il file su Drive...";
+            try {
+                // Trasformiamo l'array con le modifiche in stringa JSON da spedire
+                const datiDaInviare = JSON.stringify(DATABASE_LOCALE);
+                // Inviamo la richiesta POST all'Apps Script
+                const response = await fetch(scriptUrl, {
+                    method: "POST",
+                    mode: "cors",
+                    headers: {
+                        "Content-Type": "text/plain" // Manteniamo text/plain così Apps Script legge e.postData.contents senza problemi
+                    },
+                    body: datiDaInviare
+                });
+                // Il tuo doPost restituisce del testo semplice, quindi usiamo .text() e non .json()
+                const risultatoTesto = await response.text();
+                loadingDiv.style.display = 'none';
+                registraLog("upload");
+                if (risultatoTesto === "Dati salvati con successo") {
+                    alert("Spettacolo! Il file JSON su Google Drive è stato aggiornato.");
+                } else {
+                    alert("Il server ha risposto, ma qualcosa è andato storto: " + risultatoTesto);
+                }
+                nascondiLoader();
+            } catch (errore) {
+                loadingDiv.style.display = 'none';
+                console.error("Errore di rete:", errore);
+                alert("Impossibile connettersi al Cloud: " + errore.message);
+                nascondiLoader();
+            }
+        };
+        //-------------------------------------------esporta testo-------------------------------
+        function esportaInTestoPerTitolo() {
+            if (DATABASE_LOCALE.length === 0) {
+                alert("Nessun dato da esportare!");
+                return;
+            }
+            let testoFinale = "";
+            // Aggiungiamo 'indice' per sapere a che numero di libro siamo arrivati
+            DATABASE_LOCALE.forEach((libro, indice) => {
+                let numeroOrdine = indice + 1; // Parte da 0, quindi facciamo +1 per avere 1, 2, 3...
+                let titolo = libro.titolo || "TITOLO MANCANTE";
+                let autore = libro.autore || "AUTORE MANCANTE";
+                let collocazione = libro.scaffale || "NESSUNA COLLOCAZIONE";
+                let numeroRipiano = libro.numero || "-";
+
+                // Costruiamo la riga inserendo il numero d'ordine seguito da una parentesi a sinistra
+                testoFinale += `${numeroOrdine}) ${titolo} - ${autore} - ${collocazione.replace(/\s+/g, '-')} - N. ${numeroRipiano}\n`;
+            });
+
+            // --- MECCANISMO DI SCARICAMENTO AUTOMATICO ---
+            const blob = new Blob([testoFinale], { type: "text/plain;charset=utf-8" });
+            const link = document.createElement("a");
+
+            link.href = URL.createObjectURL(blob);
+            link.download = "elenco_libri_ordinato.txt";
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        //---------------------------------------esporta per autore------------
+        function esportaInTestoPerAutore() {
+            if (DATABASE_LOCALE.length === 0) {
+                alert("Nessun dato da esportare!");
+                return;
+            }
+            // Creiamo una copia separata del database per non sballare l'ordine della schermata principale
+            let elencoPerAutore = [...DATABASE_LOCALE];
+            // Ordiniamo la copia prima per Autore e, se l'autore è lo stesso, per Titolo
+            elencoPerAutore.sort((a, b) => {
+                let compAutore = (a.autore || "").localeCompare(b.autore || "");
+                if (compAutore !== 0) {
+                    return compAutore; // Se gli autori sono diversi, ordina per autore
+                }
+                return (a.titolo || "").localeCompare(b.titolo || ""); // Se l'autore è lo stesso, ordina per titolo
+            });
+
+            let testoFinale = "";
+
+            // Cicliamo sulla lista appena ordinata
+            elencoPerAutore.forEach((libro, indice) => {
+                let numeroOrdine = indice + 1;
+                let titolo = libro.titolo || "TITOLO MANCANTE";
+                let autore = libro.autore || "AUTORE MANCANTE";
+                let collocazione = libro.scaffale || "NESSUNA COLLOCAZIONE";
+                let numeroRipiano = libro.numero || "-";
+
+                // Costruiamo la riga invertita: NUMERO) AUTORE - TITOLO - COLLOCAZIONE - N. NUMERO
+                testoFinale += `${numeroOrdine}) ${autore} - ${titolo} - ${collocazione.replace(/\s+/g, '-')} - N. ${numeroRipiano}\n`;
+            });
+
+            // --- MECCANISMO DI SCARICAMENTO ---
+            const blob = new Blob([testoFinale], { type: "text/plain;charset=utf-8" });
+            const link = document.createElement("a");
+
+            link.href = URL.createObjectURL(blob);
+            link.download = "elenco_libri_per_AUTORE.txt";
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        function verificaDati() {
+            // 1. Recuperiamo la stringa grezza dal localStorage
+            let libriGrezzi = localStorage.getItem("archivio_libri");
+            // Se non c'è nulla (null), usiamo un array vuoto "[]" come paracadute
+            let libriJson = JSON.parse(libriGrezzi || "[]");
+            // Sincronizziamo la memoria attiva dell'app
+            DATABASE_LOCALE = libriJson;
+            // Ora calcoliamo la lunghezza reale in totale sicurezza
+            let libriAttuali = libriJson.length;
+            // 2. Recuperiamo quanti ce n'erano l'ultima volta che abbiamo scaricato dal Cloud
+            // Usiamo il parseInt per trasformare il testo del localStorage in un numero reale. Se non esiste, restituisce 0.
+            let libriUltimoDownload = parseInt(localStorage.getItem("conteggio_ultimo_download")) || 0;
+            console.log("Verifica - Attuali in locale:", libriAttuali, "| All'ultimo download:", libriUltimoDownload);
+            vMess(("Verifica - Attuali in locale:", libriAttuali, "| All'ultimo download:", libriUltimoDownload), 3600);
+            // 3. SE IL CONTEGGIO DEL DOWNLOAD È ZERO, significa che non è mai stato fatto un download tracciato
+            if (libriUltimoDownload === 0) {
+                if (typeof vMess === "function") {
+                    vMess("Nessun punto di controllo download trovato. Fai un Down prima.", 3500);
+                } else {
+                    alert("Nessun punto di controllo download trovato. Ti consiglio di fare un 'Down' per allineare il sistema.");
+                }
+                return;
+            }
+            // 4. CONFRONTO DEI DATI
+            if (libriAttuali !== libriUltimoDownload) {
+                // C'è discrepanza! Calcoliamo la differenza per dare un'info precisa
+                let differenza = Math.abs(libriAttuali - libriUltimoDownload);
+                let messaggio = `⚠️ ATTENZIONE: Rilevata discordanza nei record!\n\n` +
+                    `• Libri attualmente in locale: ${libriAttuali}\n` +
+                    `• Libri all'ultimo download: ${libriUltimoDownload}\n` +
+                    `• Differenza: ${differenza} libro/i.\n\n` +
+                    `Ricordati di effettuare un UPLOAD per salvare le modifiche su Google Drive!`;
+                vMess(("Discordanza archivi:" + differenza), 3502);
+                alert(messaggio);
+            } else {
+                // Tutto allineato perfettamente
+                if (typeof vMess === "function") {
+                    vMess("✅ Database coerente! Nessuna discrepanza rilevata.", 3500);
+                } else {
+                    alert("✅ Database coerente! I libri in locale corrispondono all'ultimo scaricamento.");
+                }
+            }
+        }
+        // Mostra la rotella e blocca lo schermo
+        function mostraLoader() {
+            document.getElementById("loader-container").style.display = "flex";
+        }
+        // Nasconde la rotella e sblocca lo schermo
+        function nascondiLoader() {
+            document.getElementById("loader-container").style.display = "none";
+        }
+        //--------------------------------------------------------------------------------------
+        // Funzione universale: restituisce true se la password è corretta, false se è errata
+        //--------------------------------------------------------------------------------------
+        let tent = 0;
+        async function verificaPasswordRemota() {
+            let psw = prompt('Digita password:');
+            if (psw === null) return false; // L'utente ha premuto Annulla
+            // Recuperiamo la password memorizzata la volta scorsa
+            let pswLocal = localStorage.getItem("psw");
+            let esito = false;
+            // =================================================================
+            // CASO A: SIAMO IN DOWNLOAD (Oppure è la prima volta in assoluto e non c'è una psw locale)
+            // =================================================================
+            if (funz === "download" || !pswLocal) {
+                console.log("Modalità Download o Prima Configurazione: Controllo ONLINE su Google...");
+                mostraLoader();
+                try {
+                    const urlVerifica = `${scriptUrl}?azione=verificaPassword&psw=${encodeURIComponent(psw)}`;
+                    const response = await fetch(urlVerifica);
+                    esito = await response.text();
+                    nascondiLoader();
+                    if (esito === "OK") {
+                        // Se Google dà il via libera, salviamo (o sovrascriviamo) la password in locale
+                        localStorage.setItem("psw", psw);
+                        console.log("Password aggiornata e salvata nel localStorage.");
+                        return true;
+                    } else {
+                        alert("Password errata a livello Cloud!!! Accesso negato.");
+                        return false;
+                    }
+                } catch (errore) {
+                    nascondiLoader();
+                    console.error("Errore di rete:", errore);
+                    alert("Errore di connessione durante la verifica cloud.");
+                    return false;
+                }
+            }
+            // =================================================================
+            // CASO B: TUTTE LE ALTRE FUNZIONI (Controllo OFFLINE ultra-rapido)
+            // =================================================================
+            if (psw === pswLocal) {
+                return true; // Password identica a quella in memoria, vai avanti!
+            } else {
+                vMess("password errata", 3502);
+                return true;
+            }
+            return false; // Password sbagliata
+        }
+        //-------------------------------------------------------------
+        function viewTrash() {
+            funz = "trash";
+            const trash = localStorage.getItem("archivio_trash");
+            const trashx = trash ? JSON.parse(trash) : [];
+            const contenitore = document.getElementById('lista');
+            DATABASE_LOCALE = trashx;
+            contenitore.innerHTML = "";
+            document.getElementById("lista").style.display = 'grid';
+            mostraLibri(trashx);
+        }
+        //-----------------------------------------------------ripristina da trash--------------------------
+        function undelTrash(index) {
+            console.log("sono a undelTrash" + index);
+            console.log(funz);
+            if (index === null) {
+                return;
+            }
+            if (funz !== "trash") {
+                return;
+            }
+            console.log("recovery....=" + index);
+            //----------------------------------------------------------------------
+            const modale = document.getElementById("mioModale");
+            modale.style.display = "block"; //attiva visualizzazione
+            //---cattura cosa clicco
+            document.getElementById("btnSalva").onclick = () => {
+                console.log("Ripristinato libro!");
+                //---
+                console.log("sono su OK");
+                const trash = localStorage.getItem("archivio_trash");
+                const trashx = trash ? JSON.parse(trash) : [];
+                const libri = localStorage.getItem("archivio_libri");
+                const librix = libri ? JSON.parse(libri) : [];
+                try {
+                    // Prendi il libro dal cestino e mettilo nei libri vivi
+                    registraLog(`Ripristina da trash: ${trashx[index].titolo} - ${trashx[index].autore} - ${trashx[index].scaffale}${trashx[index].numero}`);
+                    let daCancellare = librix[indice];
+                    librix.push(trashx[index]);
+                    // Salva l'array aggiornato nel localStorage
+                    localStorage.setItem("archivio_libri", JSON.stringify(librix));
+                    // AGGIORNAMENTO CORRETTO DELLA VARIABILE GLOBALE:
+
+                    // Rimuovi il libro dal cestino usando splice
+                    trashx.splice(index, 1);
+                    localStorage.setItem("archivio_trash", JSON.stringify(trashx)); // Ricordati di salvare anche il cestino svuotato!
+                    DATABASE_LOCALE = trashx;
+                    mostraLibri(DATABASE_LOCALE);
+                    // Attento alle maiuscole/minuscole su vmess/vMess
+                    if (typeof vMess === "function") vMess("Ripristino avvenuto con successo!", 3500);
+                    else alert("Ripristino avvenuto con successo!");
+                } catch (e) {
+                    if (typeof vMess === "function") vMess("Ripristino fallito verifica gli archivi!", 3000);
+                    else alert("Ripristino fallito!");
+                    //------------------------------------------------------------------    
+                }
+                modale.style.display = "none";
+                //------------------------------------elimina definitivamente da trash-----------
+                document.getElementById("btnElimina").onclick = () => {
+                    console.log("Eliminato elemento definitivamente!");
+                    vMess("Eliminato definitivamente!", 3502);
+                    const trash = localStorage.getItem("archivio_trash");
+                    const trashx = trash ? JSON.parse(trash) : [];
+                    trashx.splice(index, 1);
+                    localStorage.setItem("archivio_trash", JSON.stringify(trashx));
+                    DATABASE_LOCALE = trashx;
+                    mostraLibri(DATABASE_LOCALE);
+                    modale.style.display = "none";
+                };
+                //-------------------------------operazione annullata--------------------
+                document.getElementById("btnAnnulla").onclick = () => {
+                    console.log("Operazione annullata.");
+                    vMess("Nessuna modifica!", 3502);
+                    modale.style.display = "none";
+                    return;
+                }
+            };
+        }
+        function resetLog() {
+            let scelta = confirm("Vuoi resettare il file di log?");
+            if (scelta) {
+                localStorage.removeItem("log");
+                vMess("Reset file di log con successo", 3500);
+            } else {
+                vMess("Rese file di log annullato dall'utente", 3503);
+                return;
+            }
+        }
+        function registraLog(text) {
+            const datario = new Date().toLocaleString('it-IT', {
+                timeZone: 'Europe/Rome',
+                dateStyle: 'full', // o 'short' / 'medium' / 'long'
+                timeStyle: 'medium' // o 'short'
+            });
+            try {
+                const datiLog = JSON.parse(localStorage.getItem("log")) || [];
+                datiLog.push(`${datario} | ${text}`);
+                localStorage.setItem("log", JSON.stringify(datiLog));
+                return;
+            } catch (e) {
+                vMess("Errore di scrittura su file Log" + e);
+            }
+        }
+        //-------visualizza i log di modifiche cancellazioni e nuovi inseriti-----
+        function viewLog() {
+            const textLog = JSON.parse(localStorage.getItem("log")) || [];
+            const contenitore = document.getElementById('lista');
+            document.getElementById("lista").style.display = 'grid';
+            contenitore.innerText = "";
+            const datiLog = document.createElement('div');
+            datiLog.className = 'book-info';
+            //-----------------------------ciclo-----------------------
+            textLog.forEach(function (riga) {
+                let cardLog = document.createElement('div');
+                let infoLog = document.createElement('div');
+                cardLog.className = 'book-card';
+                cardLog.style.display = "inline-block";
+                infoLog.className = 'book-info';
+                infoLog.innerText = riga;
+                cardLog.appendChild(infoLog);
+                contenitore.appendChild(cardLog);
+            });
+        };
+        //-------------------------------------------------------------------
+        function dispo() { // imposto il video in base al dispositivo
+            const isMobile = navigator.userAgentData?.mobile || false;
+            if (isMobile) {
+                console.log("Sei su un dispositivo mobile");
+                cambiaVisualizzazione("mode-pc")
+            } else {
+                console.log("Sei su un PC fisso");
+                cambiaVisualizzazione("mode-phone")
+            }
+        }
+        //---------------------------backup e restore file locale-------------------------------------
+        async function backupFile() {
+            const datiGrezzi = localStorage.getItem("archivio_libri");
+            if (!datiGrezzi) return alert("Nulla da salvare!");
+            // Controlliamo se il browser supporta la nuova API
+            if ('showSaveFilePicker' in window) {
+                try {
+                    // Configura le opzioni della finestra di salvataggio
+                    const opzioni = {
+                        suggestedName: `backup_archivio_libri.json`,
+                        types: [{
+                            description: 'File JSON di Backup',
+                            accept: { 'application/json': ['.json'] }
+                        }]
+                    };
+                    // 1. Mostra la finestra nativa e aspetta la risposta dell'utente
+                    const handle = await window.showSaveFilePicker(opzioni);
+                    // 2. Se siamo arrivati qui, l'utente ha premuto "Salva". Scriviamo il file:
+                    const writable = await handle.createWritable();
+                    await writable.write(datiGrezzi);
+                    await writable.close();
+                    // 3. Feedback di successo REALE
+                    vMess("archivio_libri salvato con successo!", 3500);
+                } catch (errore) {
+                    // Se l'utente preme "Annulla", il browser lancia un errore chiamato AbortError
+                    if (errore.name === 'AbortError') {
+                        vMess("Salvataggio annullato dall'utente.", 3502);
+                    } else {
+                        // Altri tipi di errore (es. permessi del disco)
+                        vMess("Errore durante il salvataggio del file.", 3502);
+                        console.error(errore);
+                    }
+                }
+            } else {
+                // --- Soluzione di ripiego (Fallback) per browser vecchi ---
+                // Se il browser non supporta la nuova API, usiamo il tuo vecchio metodo
+                const blob = new Blob([datiGrezzi], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `backup_archivio_libri.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+                // In questo caso vecchio, dobbiamo per forza avvisare con un messaggio generico
+                vMess("Download avviato!", 3500);
+            }
+        }
+        //------------------------------------restorefile ----------------------
+        function restoreFile(event) {
+            // Sicurezza: se l'evento o il target non esistono, interrompi senza crashare
+            if (!event || !event.target) {
+                console.error("L'evento non è stato passato correttamente.");
+                return;
+            }
+            const fileDaCaricare = event.target.files[0];
+            if (!fileDaCaricare) return;
+            const lettore = new FileReader();
+
+            lettore.onload = function (e) {
+                const contenuto = e.target.result;
+                try {
+                    const pulito = JSON.parse(contenuto);
+                    // Salviamo i dati usando i giusti accoppiamenti key / values
+                    localStorage.setItem("archivio_libri", JSON.stringify(pulito));
+                    vMess("Backup ripristinato con successo!", 3500);
+
+                    // Opzionale: ricarica la pagina o aggiorna la UI qui se necessario
+                } catch (errore) {
+                    vMess("Errore: il file selezionato non è un backup valido.", 3502);
+                }
+            };
+            // Corretto: ora usa la variabile definita sopra
+            lettore.readAsText(fileDaCaricare);
+        }
+        function full() {
+            let elem = document.documentElement;
+            if (!document.fullscreenElement) {
+                // Se NON siamo in fullscreen, entraci
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) {
+                    elem.msRequestFullscreen();
+                }
+            } else {
+                // Se siamo GIÀ in fullscreen (il tasto dice "Win"), esci
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+            }
+        }
+        //---------------------------------------------codice a barre----------------------------
+        // Variabile globale per mantenere l'istanza dello scanner
+        let html5Qrcode = null;
+        // Configurazione dello scanner (ottimizzato per EAN_13 / Libri)
+        const configScanner = {
+            fps: 10,
+            qrbox: { width: 250, height: 150 },
+            formatsToSupport: [Html5QrcodeSupportedFormats.EAN_13]
+        };
+        // 1. FUNZIONE PER ACCENDERE LO SCANNER
+        function accendiScanner() {
+            //document.getElementById("reader").style.display = "block";
+            console.log("sono a scanner");
+            // Mostriamo il contenitore HTML
+            document.getElementById('wrapper-scanner').style.display = 'block';
+            document.getElementById('wrapper-risultato').style.display = 'none';
+            document.getElementById("btn-chiudi-scanner").style.display = "block";
+            // Se non abbiamo ancora creato l'istanza, la creiamo sul div "reader"
+            if (!html5Qrcode) {
+                html5Qrcode = new Html5Qrcode("reader");
+            }
+            // Avviamo la fotocamera posteriore (environment)
+            html5Qrcode.start(
+                { facingMode: "environment" }, // Forza l'uso della fotocamera dietro dello smartphone
+                configScanner,
+                (decodedText) => {
+                    // 1. Inseriamo il testo del codice
+                    document.getElementById('barcode-result').innerText = decodedText;
+                    document.getElementById("inputBarcode").value = decodedText;
+                    // 2. FACCIAMO APPARIRE IL MESSAGGIO SOLO ORA!
+                    document.getElementById('wrapper-risultato').style.display = 'block';
+                    // 3. Spegniamo lo scanner e procediamo con Google Books
+                    spegniScanner();
+                    cercaLibroNelDatabase(decodedText);
+                },
+                (errorMessage) => {
+                    // Errore silenzioso durante la ricerca del codice
+                }
+            ).catch((err) => {
+                console.error("Impossibile avviare la fotocamera: ", err);
+            });
+        }
+        // 2. FUNZIONE PER SPEGNERE LO SCANNER
+        function spegniScanner() {
+            document.getElementById("btn-chiudi-scanner").style.display = "none";
+            if (html5Qrcode && html5Qrcode.isScanning) {
+                html5Qrcode.stop().then(() => {
+                    // Nascondiamo il contenitore HTML dopo lo spegnimento
+                    document.getElementById('wrapper-scanner').style.display = 'none';
+                }).catch((err) => {
+                    console.error("Errore durante lo spegnimento dello scanner: ", err);
+                });
+            } else {
+                // Se per qualche motivo non stava scansionando, nascondiamo comunque il div
+                document.getElementById('wrapper-scanner').style.display = 'none';
+            }
+        }
+        //---------------------------------------ricerca con code-----------------------------
+        function cercaLibroNelDatabase() {
+            let barcodeLetto = document.getElementById("inputBarcode").value;
+            if (!barcodeLetto) {
+                alert(" digita il codice di 13 cifre");
+                return;
+            };
+            let numerone = barcodeLetto;
+            let numeroDiCifre = numerone.toString().length;
+            console.log(numeroDiCifre); // Output: 15
+            if (numeroDiCifre < 13 || numeroDiCifre > 13) {
+                alert("Errore! cifre ammesse totali = 13, digita solo numeri....");
+            } return;
+            //-------------------------------------------------------------------
+            let barcode = barcodeLetto.replace(/-/g, '').replace(/ISBN/g, '').replace(/:/g, "").replace(/=/g, "").replace(/,/g, "");
+            console.log("barcode=" + barcode);
+            // Recuperiamo la chiave (se non c'è in memoria, la chiede ora)
+            GOOGLE_BOOKS_API_KEY = ottieniApiKey();
+            // Se l'utente ha annullato il prompt e la chiave non c'è, blocchiamo la ricerca
+            if (!GOOGLE_BOOKS_API_KEY) {
+                return;
+            }
+            console.log(GOOGLE_BOOKS_API_KEY)
+            const pulitoBarcode = barcode.trim();
+            const url = `https://www.googleapis.com/books/v1/volumes?q=isbn:${pulitoBarcode}&key=${GOOGLE_BOOKS_API_KEY}`;
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        if (typeof vMess === "function") vMess("Errore nella risposta di Google", 3502);
+                        throw new Error(`Errore HTTP: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.items || data.items.length === 0) {
+                        alert("Libro non trovato nel database di Google!");
+                        return;
+                    }
+                    console.log("prendo i dati");
+                    const libroInfo = data.items[0].volumeInfo;
+                    memoTitolo = libroInfo.title || "Titolo non disponibile";
+                    memoAutore = libroInfo.authors ? libroInfo.authors.join(", ") : "Autore sconosciuto";
+                    memoISBN = pulitoBarcode;
+                    mostraLibroInScatola(memoTitolo, memoAutore, memoISBN);
+                })
+                .catch(error => {
+                    console.error("Errore durante il fetch:", error);
+                    alert("Errore nella ricerca. La API Key potrebbe essere errata o scaduta.");
+                });
+        }        // Funzione di supporto per mostrare a schermo il risultato (da personalizzare come vuoi)
+        function mostraLibroInScatola(titolo, autore, barcode) {
+            alert(`Dati libro:\n\nTitolo: ${titolo}\nAutore: ${autore}\nISBN: ${barcode}`);
+            const libri = localStorage.getItem("archivio_libri");
+            const librix = JSON.parse(libri);
+            const titoloTrovato = librix.find(libroT => libroT.titolo === memoTitolo.toUpperCase());
+            console.log("titoloTrovato");
+            if (titoloTrovato) {
+                alert("Libro trovato in archivio_libri");
+            } else {
+                let esegui = confirm("Ti manca, Vuoi inserirlo?");
+                if (esegui) {
+                    document.getElementById("btn-incolla").style.display = "block";   //incollaDatiNelForm();
+                    okPsw();
+                    aggiungiLibro();
+                }
+            }
+        }
+        function incollaDatiNelForm() {
+            console.log("memotitolo=" + memoTitolo)
+            if (memoTitolo === "") return;
+            // Trasferiamo i dati nei campi del tuo HTML
+            document.getElementById('titolo').value = memoTitolo.toUpperCase();
+            document.getElementById('autore').value = memoAutore.toUpperCase();
+            document.getElementById('isbn').value = memoISBN.trim();
+            document.getElementById('scaffale').focus();
+            document.getElementById('numero').focus();
+            document.getElementById("btn-incolla").style.display = "none";
+        }
+        // DOPO CHE L'UTENTE CLICCA "SALVA LIBRO" NEL DATABASE:
+        function afterSave() {
+            // Svuotiamo le variabili globali temporanee
+            memoTitolo = "";
+            memoAutore = "";
+            memoISBN = "";
+            document.getElementById("inputBarcode").value = "";
+            // Disattiviamo il pulsante uncolla
+            document.getElementById("btn-incolla").style.display = "none";
+            // Puliamo i campi del form per il prossimo inserimento
+            pulisciCampi();
+            document.getElementById('wrapper-risultato').style.display = 'none';
+        }
+        //-----------------resetta api key---------------------------
+        document.getElementById("btnResettaApiKey").onclick = resettaApiKey;
+        async function resettaApiKey() {
+            const pswOk = await verificaPasswordRemota();
+            if (!pswOk) return; // Se la password è fallita o ha annullato, ci fermiamo qui.
+            okPsw();
+            let conf = confirm("Sei sicuro di voler resettare la API key attuale?")
+            if (conf) {
+                localStorage.removeItem('google_books_api_key');
+                let GOOGLE_BOOKS_API_KEY = "";
+                alert("API Key rimossa. Verrà richiesta una nuova chiave al prossimo utilizzo.");
+            } else {
+                vMess("Funzione annullata dall'utente", 3503);
+                return;
+            }
+        }
+        // 1. Funzione per gestire il recupero e il salvataggio della chiave
+        function ottieniApiKey() {
+            // Cerca la chiave usando la key 'google_books_api_key'
+            let key = localStorage.getItem('google_books_api_key');
+            // Se non esiste (è null) o è una stringa vuota
+            if (!key) {
+                key = prompt("Inserisci la tua Google Books API Key per attivare la ricerca:");
+                if (key && key.trim() !== "") {
+                    key = key.trim();
+                    localStorage.setItem('google_books_api_key', key); // Salva in localStorage
+                    alert("API Key salvata con successo!");
+                } else {
+                    alert("Attenzione: Senza API Key la ricerca dei libri non funzionerà.");
+                    return null;
+                }
+            }
+            GOOGLE_BOOKS_API_KEY = key;
+            return key;
+        }
+    </script>
+</body>
+
+</html>
